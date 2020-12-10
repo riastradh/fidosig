@@ -7,6 +7,7 @@ PYTHON = python
 FETCH = curl -L -o
 
 all: .PHONY
+	rm -rf build && \
 	$(PYTHON) setup.py build
 
 publicsuffix: .PHONY
