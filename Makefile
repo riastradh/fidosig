@@ -22,3 +22,8 @@ check: all
 check: lint
 	PYTHONPATH=`pwd`/build/lib \
 	$(PYTHON) -m pytest --pyargs fidosig
+
+clean: .PHONY
+	-rm -rf build
+	-rm -rf dist
+	-rm -rf fidosig.egg-info
