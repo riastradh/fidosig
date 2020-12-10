@@ -1,4 +1,4 @@
-Fidosig file formats
+Fidosig data formats
 ====================
 
 Every file format handled by fidosig starts with an 8-byte tag,
@@ -15,6 +15,31 @@ All files are meant to be small enough to fit in memory -- if you are
 accepting thousands of signatories on a single document, you probably
 don't have much security anyway.  Each credential and signature is
 roughly 150 bytes; device attestations may be longer.
+
+Credential ids
+--------------
+
+In FIDO/Webauthn, a credential id is a short opaque binary blob,
+typically 64 bytes long, identifying a key pair.  (In U2F, this was
+called a key handle.)
+
+To facilitate naming credential ids in verification policy scripts,
+fidosig externalizes them by appending a 16-bit CRC (below) and
+encoding them in URL-safe base64, following
+[RFC 3548](https://tools.ietf.org/html/rfc3548#section-4), so that they
+are reasonably copyable and pastable with some error detection.  For
+example:
+
+```
+-iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
+```
+
+The credential id can't be compressed more than this -- it's up to the
+device to choose the credential id, and they are usually
+indistinguishable from uniform random.  But the base64 encoding of a
+64-byte string has two padding characters that would otherwise go
+unused, so we fill them with a 16-bit CRC instead to help detect
+copypasta errors.
 
 Tags
 ----
@@ -104,7 +129,7 @@ G := x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11
 ```
 
 the input bytes and output CRC both have the lsb as the highest-degree
-coefficient; neither the initial nor final values are complemented; and
+coefficient; the initial and final values are both complemented; and
 the CRC as an integer is stored in little-endian bytes.
 
 Given a 32-bit quantity C representing the CRC `(m_0 x^32) mod G` for
@@ -146,3 +171,20 @@ return C
 POSIX cksum utility interprets the input bytes, and yields an output
 CRC, in reverse bit order from zlib; POSIX cksum also implicitly
 appends the length of the input in little-endian bytes.)
+
+CRC16
+-----
+
+The 16-bit CRC used in credential ids is Philip Koopman's 0xBAAD CRC,
+with generator polynomial
+
+```
+G = x^16 + x^14 + x^13 + x^12 + x^10 + x^8 + x^6 + x^4 + x^3 + x + 1;
+```
+
+the input bytes and output CRC both have the lsb as the highest-degree
+coefficient; neither the initial nor final values are complemented; and
+the CRC as an integer is stored in little-endian bytes.
+
+The computation is as for the CRC32, but with 0xDAAE in the place of
+0xEDB88320, and without complementing the initial or final values.

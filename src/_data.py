@@ -15,12 +15,14 @@
 #  limitations under the License.
 
 
+import base64
 import struct
-
-from zlib import crc32
 
 from fido2 import cbor
 from fido2.ctap2 import AttestationObject
+
+from .crc import crc16
+from .crc import crc32
 
 
 class Header:
@@ -119,3 +121,17 @@ def softkey_decode(softkey):
     assert isinstance(seed, bytes)
     assert len(seed) == 32
     return seed
+
+
+def credid_externalize(credential_id):
+    assert isinstance(credential_id, bytes)
+    data = credential_id + struct.pack('<H', crc16(credential_id))
+    assert crc16(data) == 0
+    return base64.urlsafe_b64encode(data)
+
+
+def credid_internalize(extcredid):
+    data = base64.urlsafe_b64decode(extcredid)
+    if len(data) < 2 or crc16(data):
+        raise Exception('Checksum failure')
+    return data[:-2]

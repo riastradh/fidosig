@@ -15,12 +15,12 @@
 #  limitations under the License.
 
 
-import base64
 import getopt
 import json
 import os
 
 
+from ._data import credid_externalize
 from .attest import attest
 from .cred import cred
 from .list import listcreds
@@ -326,8 +326,8 @@ def cmd_list(args, stdin, stdout, stderr):
     [path] = args
     blob = _read_file(path, stdin)
     for credential_id in listcreds(blob):
-        credential_id_b64 = base64.urlsafe_b64encode(credential_id)
-        stdout.buffer.write(b'%s\n' % (credential_id_b64,))
+        extcredid = credid_externalize(credential_id)
+        stdout.buffer.write(b'%s\n' % (extcredid,))
     return 0
 
 
@@ -715,8 +715,8 @@ def cmd_verify(args, stdin, stdout, stderr):
     sigset = _read_file(sigset_path, stdin)
     verified = sorted(verify(rp, credset, msg, sigset, header=header))
     for credential_id in verified:
-        credential_id_b64 = base64.urlsafe_b64encode(credential_id)
-        stdout.buffer.write(b'%s\n' % (credential_id_b64,))
+        extcredid = credid_externalize(credential_id)
+        stdout.buffer.write(b'%s\n' % (extcredid,))
     return 0 if verified else 1
 
 

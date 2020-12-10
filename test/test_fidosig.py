@@ -18,6 +18,7 @@
 import base64
 import pytest
 
+from fidosig._data import credid_internalize
 from fidosig.attest import attest
 from fidosig.list import listcreds
 from fidosig.merge import merge
@@ -39,8 +40,8 @@ Yz5AG+tg4X/AeJBoiQPL8fQzpQECAyYgASFYIDErESdCmkSI8RD4B5IKFgxewoLGoJSDhxqCdHZO
 v555IlggDCcjc7ZP17Xu7eM9zMQwRexDcpgLiwDwW6aFFqTV1HUt+sHc
 ''')
 
-CREDID1 = base64.urlsafe_b64decode('''
--iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0Mw==
+CREDID1 = credid_internalize('''
+-iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
 ''')
 
 ATTSET1 = base64.b64decode('''
@@ -79,8 +80,8 @@ f/PewSUh/hplzA5QgYca2ODspQECAyYgASFYIBUYSF8FOWP69o8zx3rG8T6oce3r6K54awqj2HiZ
 RcV/IlggcB8eFXURTy/PRKq6dCKEznwmbLVPFBxisu/dKwOwkvpv8HiR
 ''')
 
-CREDID2 = base64.urlsafe_b64decode('''
-WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7A==
+CREDID2 = credid_internalize('''
+WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
 ''')
 
 ATTSET2 = base64.b64decode('''
