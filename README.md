@@ -72,8 +72,8 @@ each signed with both a software key and a hardware key.
 
 ```
 % fidosig list mycredset.fsc
-EclOvCArucpS0JimWnHiFq-DaIZQiLTj4kXexxk2to3RLRpZk8eDRF_jJ7LubTeeBCsxdoM9MTBCM58Ga1R3TA==
-5PybgsHK2-cvH5QJm48e7pufdG_R1KfHC35fcn7z5MdhBWXNNXygIitq-i44_9b8bAO3RwzY4mQ8XCHYNpvOTA==
+WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
+-iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
 ```
 
 Sign a message.
@@ -89,7 +89,7 @@ all the signatories in the specified credential set.
 
 ```
 % fidosig verify mycredset.fsc foo.txt foo.sig
-EclOvCArucpS0JimWnHiFq-DaIZQiLTj4kXexxk2to3RLRpZk8eDRF_jJ7LubTeeBCsxdoM9MTBCM58Ga1R3TA==
+WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
 ```
 
 Note that signature verification fails if the file name changes!
@@ -106,8 +106,8 @@ want to use something other than the file name default.
 
 ```
 % fidosig verify -H foo.txt mycredset.fsc fooo.txt foo.sig
-EclOvCArucpS0JimWnHiFq-DaIZQiLTj4kXexxk2to3RLRpZk8eDRF_jJ7LubTeeBCsxdoM9MTBCM58Ga1R3TA==
-% mv fooo.txt fooo.txt
+WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
+% mv fooo.txt foo.txt
 ```
 
 Add a new signature by tapping a different U2F device.  You can add
@@ -142,7 +142,7 @@ Verify the signature once more:
 
 ```
 % fidosig verify mycredset.fsc foo.txt foo.sig
-EclOvCArucpS0JimWnHiFq-DaIZQiLTj4kXexxk2to3RLRpZk8eDRF_jJ7LubTeeBCsxdoM9MTBCM58Ga1R3TA==
-rcITDm03yj7Jb8WyHhkEr-nP5m5Sfl-5opYLm0CrSL2-vnBP4_ch5yr3EjaHy-6s-ZvV9fk91Ts0TRm-wwZe1Q==
-5PybgsHK2-cvH5QJm48e7pufdG_R1KfHC35fcn7z5MdhBWXNNXygIitq-i44_9b8bAO3RwzY4mQ8XCHYNpvOTA==
+WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
+hiLaGHLkqhisyTo9_19d9HYFvbBTtCzzC1-Z2jCtoU0K530X7G2OyEwaz_mWZsjINWeeOSUIeVmM0Eny
+byIH2EiQ                                                                        -iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
 ```
