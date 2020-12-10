@@ -38,7 +38,7 @@ def get_version():
         expected_tag = 'v' + version
         description = subprocess.check_output([
             'git', 'describe', '--dirty', '--match', expected_tag,
-        ])
+        ]).decode('utf8')
         if description != expected_tag:
             match = re.match(r'^(v[^-]*)-([0-9]+)-(.*)$', description)
             assert match is not None
