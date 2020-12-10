@@ -14,6 +14,40 @@ implement verification policies such as thresholds.
   signtaure scheme are subject to change during development until
   various details have been sorted out.**
 
+Features
+--------
+
+- Just like login with U2F -- and unlike crypto smartcards -- fidosig
+  doesn't require any tools to initialize, configure, examine, and
+  manage key storage on your U2F device.  You just plug it in and tap
+  when you want to create a public key or make a signature with it.
+
+- Signatures made by fidosig are _not_ human-readable and have no
+  human-readable components like comments.  You should not be tempted
+  to inspect them; you should only pass them through automated
+  verification.
+
+- Fidosig signs the file's name, not just the file's content.  You can
+  specify an arbitrary header if you like instead of the file name, or
+  an empty one -- but out of the box, an adversary can't, for example,
+  just rename an old buggy software release to have a newer version
+  number and still pass signature verification.
+
+- Fidosig has reasonably simple compact data formats, based on CBOR of
+  [RFC 7049](https://tools.ietf.org/html/rfc7049) like FIDO/webauthn,
+  and a simple set of operations on the data formats -- it is meant to
+  be easy to integrate into an existing application, either as a
+  subprocess or via a Python API (XXX the API is not stable yet).
+
+- Fidosig makes it easy to combine sets of credentials and sets of
+  signatures together, and shows which signatories were verified on a
+  file to facilitate writing verification policy scripts -- for
+  example: must be signed by both the hardware token and the software
+  token of each of at least three of ten authorized developers.
+
+- Fidosig is boring crypto.  No fancy multiparty homomorphic robust
+  multivariate-quadratic semisogenies in the neo-oracle model.
+
 Installation
 ------------
 
@@ -146,3 +180,8 @@ WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGH
 hiLaGHLkqhisyTo9_19d9HYFvbBTtCzzC1-Z2jCtoU0K530X7G2OyEwaz_mWZsjINWeeOSUIeVmM0Eny
 byIH2EiQ                                                                        -iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
 ```
+
+Postscript
+----------
+
+fidosig basically does a Fido-Shamir transformation of U2F.
