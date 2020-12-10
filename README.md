@@ -6,7 +6,7 @@ Taylor `Riastradh' Campbell <campbell+fidosig@mumble.net>
 **Fidosig** is a signature scheme based on U2F/FIDO/webauthn.  You can
 use it to sign files with a U2F security key, or optionally with
 software using a secret stored on disk.  You can easily handle multiple
-signers on a single document, and use `fidosig verify' in scripts to
+signers on a single document, and use `fidosig verify` in scripts to
 implement verification policies such as thresholds.
 
 - **WARNING: Fidosig is a draft work in progress.  All the data
@@ -64,7 +64,7 @@ tap key; waiting...
 You can distribute credset.fsc to whoever you want to authenticate
 future documents from you.
 
-List the credential's id.  This id will appear in `fidosig verify'
+List the credential's id.  This id will appear in `fidosig verify`
 output; you might save it into a script to implement signature
 policies, such as ensuring that at least one member of two different
 committees has signed a document, or at least three developers have
