@@ -26,6 +26,7 @@ check: lint
 env: .PHONY
 	PYTHONPATH="`pwd`/build/lib" \
 	PYTHON="$(PYTHON)" \
+	FIDOSIG="$(PYTHON) -m fidosig" \
 	$(SHELL)
 
 clean: .PHONY
