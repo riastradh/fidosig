@@ -156,26 +156,29 @@ def test_attest():
 
 
 def test_verify():
+    allcreds = merge([CREDSET1, CREDSET2])
+    allsigs = merge([SIG1, SIG2])
     assert verify(RP, CREDSET1, MSG, SIG1, HDR) == set([CREDID1])
     assert verify(RP, CREDSET2, MSG, SIG2, HDR) == set([CREDID2])
-    assert verify(RP, merge([CREDSET1, CREDSET2]), MSG, SIG1, HDR) == \
-        set([CREDID1])
-    assert verify(RP, merge([CREDSET1, CREDSET2]), MSG, SIG2, HDR) == \
-        set([CREDID2])
-    assert verify(RP, CREDSET1, MSG, merge([SIG1, SIG2]), HDR) == \
-        set([CREDID1])
-    assert verify(RP, CREDSET2, MSG, merge([SIG1, SIG2]), HDR) == \
-        set([CREDID2])
+    assert verify(RP, allcreds, MSG, SIG1, HDR) == set([CREDID1])
+    assert verify(RP, allcreds, MSG, SIG2, HDR) == set([CREDID2])
+    assert verify(RP, CREDSET1, MSG, allsigs, HDR) == set([CREDID1])
+    assert verify(RP, CREDSET2, MSG, allsigs, HDR) == set([CREDID2])
+    assert verify(RP, allcreds, MSG, allsigs, HDR) == set([CREDID1, CREDID2])
     with pytest.raises(Exception):
         verify(RP, CREDSET1, MSG, SIG1)
     with pytest.raises(Exception):
         verify(RP, CREDSET2, MSG, SIG2)
+    with pytest.raises(Exception):
+        verify(RP, allcreds, MSG, allsigs)
     assert verify(RP, CREDSET1, MSG, SIG2, HDR) == set([])
     assert verify(RP, CREDSET2, MSG, SIG1, HDR) == set([])
     with pytest.raises(Exception):
         verify(RP, CREDSET1, MSG + b'\0', SIG1, HDR)
     with pytest.raises(Exception):
         verify(RP, CREDSET2, MSG + b'\0', SIG2, HDR)
+    with pytest.raises(Exception):
+        verify(RP, allcreds, MSG + b'\0', allsigs, HDR)
 
 
 def test_softkey():
