@@ -1,5 +1,5 @@
-Fidosig -- FIDO-based file signatures
-=====================================
+Fidosig -- FIDO-based digital signature tool (EXPERIMENTAL)
+===========================================================
 
 Taylor `Riastradh' Campbell <campbell+fidosig@mumble.net>
 
@@ -9,9 +9,9 @@ software using a secret stored on disk.  You can easily handle multiple
 signers on a single document, and use `fidosig verify` in scripts to
 implement verification policies such as thresholds.
 
-- **WARNING: Fidosig is a draft work in progress.  All the data
-  formats, command line interfaces, APIs, and the details of the
-  signtaure scheme are subject to change during development until
+- **WARNING: Fidosig is an experimental draft work in progress.  All
+  the data formats, command line interfaces, APIs, and the details of
+  the signtaure scheme are subject to change during development until
   various details have been sorted out.**
 
 Features
