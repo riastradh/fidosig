@@ -20,8 +20,13 @@ lint: .PHONY
 check: .PHONY
 check: all
 check: lint
-	PYTHONPATH=`pwd`/build/lib \
+	PYTHONPATH="`pwd`/build/lib" \
 	$(PYTHON) -m pytest --pyargs fidosig
+
+env: .PHONY
+	PYTHONPATH="`pwd`/build/lib" \
+	PYTHON="$(PYTHON)" \
+	$(SHELL)
 
 clean: .PHONY
 	-rm -rf build
