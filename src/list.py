@@ -18,7 +18,6 @@
 from ._data import Header
 from ._data import attset_decode
 from ._data import credset_decode
-from ._data import sigset_decode
 
 
 def listcreds(blob):
@@ -30,7 +29,7 @@ def listcreds(blob):
     elif header == Header.ATTSET:
         return sorted(attset_decode(blob).keys())
     elif header == Header.SIGSET:
-        return sorted(sigset_decode(blob).keys())
+        raise Exception('do not list signatories without verifying them')
     elif header == Header.SOFTKEY:
         raise Exception('softkeys do not store credentials')
     else:

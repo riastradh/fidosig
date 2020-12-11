@@ -124,19 +124,16 @@ def test_list_merge():
     assert listcreds(merge([ATTSET1, ATTSET2])) == sorted([CREDID1, CREDID2])
 
 
-@pytest.mark.xfail(strict=True)
 def test_list_rejects_sigset1():
     with pytest.raises(Exception):
         listcreds(SIG1)
 
 
-@pytest.mark.xfail(strict=True)
 def test_list_rejects_sigset2():
     with pytest.raises(Exception):
         listcreds(SIG2)
 
 
-@pytest.mark.xfail(strict=True)
 def test_list_rejects_sigset():
     with pytest.raises(Exception):
         listcreds(merge([SIG1, SIG2]))
