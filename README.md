@@ -177,8 +177,8 @@ Verify the signature once more:
 ```
 % fidosig verify mycredset.fsc foo.txt foo.sig
 WsL_USIIjO1uwG0PAPxNIfqcdJLcxZ1E8plHAwJWONqwKfKdrzm24Y-UQvwOdH_z3sElIf4aZcwOUIGHGtjg7ODF
-hiLaGHLkqhisyTo9_19d9HYFvbBTtCzzC1-Z2jCtoU0K530X7G2OyEwaz_mWZsjINWeeOSUIeVmM0Eny
-byIH2EiQ                                                                        -iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
+hiLaGHLkqhisyTo9_19d9HYFvbBTtCzzC1-Z2jCtoU0K530X7G2OyEwaz_mWZsjINWeeOSUIeVmM0EnybyIH2EiQ
+-iduNhP5dUFohmugTg01bLc0DNpbjTwDAj0ld3_J1fazU9p9dq5C8E7zzlIJzmM-QBvrYOF_wHiQaIkDy_H0M8_i
 ```
 
 Postscript
