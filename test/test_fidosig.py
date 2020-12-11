@@ -122,9 +122,24 @@ def test_list_merge():
     assert listcreds(ATTSET1) == [CREDID1]
     assert listcreds(ATTSET2) == [CREDID2]
     assert listcreds(merge([ATTSET1, ATTSET2])) == sorted([CREDID1, CREDID2])
-    assert listcreds(SIG1) == [CREDID1]
-    assert listcreds(SIG2) == [CREDID2]
-    assert listcreds(merge([SIG1, SIG2])) == sorted([CREDID1, CREDID2])
+
+
+@pytest.mark.xfail(strict=True)
+def test_list_rejects_sigset1():
+    with pytest.raises(Exception):
+        listcreds(SIG1)
+
+
+@pytest.mark.xfail(strict=True)
+def test_list_rejects_sigset2():
+    with pytest.raises(Exception):
+        listcreds(SIG2)
+
+
+@pytest.mark.xfail(strict=True)
+def test_list_rejects_sigset():
+    with pytest.raises(Exception):
+        listcreds(merge([SIG1, SIG2]))
 
 
 def test_attest():
@@ -171,8 +186,6 @@ def test_softkey():
     credset = softcred(softkey, RP, USER)
     ids = listcreds(credset)
     sigset = softsign(softkey, RP, credset, MSG, randomization=NOTRANDOM24)
-    assert ids == listcreds(sigset)
-    sigset_ = softsign(softkey, RP, credset, MSG, randomization=NOTRANDOM24)
-    assert ids == listcreds(sigset_)
-    assert sigset == sigset_
     assert ids == sorted(verify(RP, credset, MSG, sigset))
+    sigset_ = softsign(softkey, RP, credset, MSG, randomization=NOTRANDOM24)
+    assert sigset == sigset_
