@@ -53,7 +53,6 @@ def verify_origin(rp_id, origin):
         return True
     if url.hostname.endswith('.' + rp_id) and rp_id not in public_suffixes:
         return True
-    sys.stderr.write('dunno %r %r %r\n' % (url, rp_id, origin))
     return False
 
 
