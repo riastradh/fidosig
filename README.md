@@ -1,7 +1,7 @@
 Fidosig -- FIDO-based digital signature tool (EXPERIMENTAL)
 ===========================================================
 
-Taylor `Riastradh' Campbell <campbell+fidosig@mumble.net>
+Taylor ‘Riastradh’ Campbell <campbell+fidosig@mumble.net>
 
 **Fidosig** is a signature scheme based on U2F/FIDO/webauthn.  You can
 use it to sign files with a U2F security key, or optionally with
