@@ -21,8 +21,8 @@ import struct
 from fido2 import cbor
 from fido2.ctap2 import AttestationObject
 
-from .crc import crc16
-from .crc import crc32
+from ._crc import crc16
+from ._crc import crc32
 
 
 class Header:
