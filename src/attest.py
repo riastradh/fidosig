@@ -15,8 +15,25 @@
 #  limitations under the License.
 
 
-from fido2.client import ClientData
-from fido2.client import WEBAUTHN_TYPE
+try:
+    from fido2.webauthn import CollectedClientData
+
+    class ClientData(CollectedClientData):
+        @classmethod
+        def build(cls, **kwargs):
+            import json
+            if 'cross_origin' in kwargs:
+                assert 'crossOrigin' not in kwargs
+                kwargs['crossOrigin'] = kwargs['cross_origin']
+                del kwargs['cross_origin']
+            return cls(json.dumps(kwargs).encode())
+
+    class WEBAUTHN_TYPE:
+        MAKE_CREDENTIAL = CollectedClientData.TYPE.CREATE
+        GET_ASSERTION = CollectedClientData.TYPE.GET
+except ImportError:
+    from fido2.client import ClientData
+    from fido2.client import WEBAUTHN_TYPE
 from fido2.utils import websafe_encode
 
 from ._data import attset_decode

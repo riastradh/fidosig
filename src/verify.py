@@ -16,10 +16,29 @@
 
 
 from fido2.attestation import InvalidSignature
-from fido2.client import ClientData
-from fido2.client import WEBAUTHN_TYPE
-from fido2.ctap2 import AttestedCredentialData
-from fido2.ctap2 import AuthenticatorData
+try:                            # >=0.9
+    from fido2.webauthn import AttestedCredentialData
+    from fido2.webauthn import AuthenticatorData
+    from fido2.webauthn import CollectedClientData
+
+    class ClientData(CollectedClientData):
+        @classmethod
+        def build(cls, **kwargs):
+            import json
+            if 'cross_origin' in kwargs:
+                assert 'crossOrigin' not in kwargs
+                kwargs['crossOrigin'] = kwargs['cross_origin']
+                del kwargs['cross_origin']
+            return cls(json.dumps(kwargs).encode())
+
+    class WEBAUTHN_TYPE:
+        MAKE_CREDENTIAL = CollectedClientData.TYPE.CREATE
+        GET_ASSERTION = CollectedClientData.TYPE.GET
+except ImportError:             # <0.9
+    from fido2.client import ClientData
+    from fido2.client import WEBAUTHN_TYPE
+    from fido2.ctap2 import AttestedCredentialData
+    from fido2.ctap2 import AuthenticatorData
 from fido2.utils import websafe_encode
 from fido2.webauthn import UserVerificationRequirement
 

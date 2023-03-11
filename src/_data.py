@@ -19,7 +19,10 @@ import base64
 import struct
 
 from fido2 import cbor
-from fido2.ctap2 import AttestationObject
+try:
+    from fido2.webauthn import AttestationObject
+except ImportError:
+    from fido2.ctap2 import AttestationObject
 
 from ._crc import crc16
 from ._crc import crc32
@@ -65,8 +68,19 @@ def credset_decode(credset):
 
 def attset_encode(attset_dict):
     assert isinstance(attset_dict, dict)
+
+    def encode_ao(ao):
+        if hasattr(AttestationObject, 'KEY'):  # <0.9
+            return bytes(ao)
+        else:                   # >=0.9
+            return cbor.encode({
+                1: ao.fmt,
+                2: ao.auth_data,
+                3: ao.att_stmt,
+            })
+
     return _encap(Header.ATTSET, {
-        credential_id: bytes(attestation_object)
+        credential_id: encode_ao(attestation_object)
         for credential_id, attestation_object in attset_dict.items()
     })
 
@@ -75,9 +89,22 @@ def attset_decode(attset):
     obj = _decap(Header.ATTSET, attset, 'attestation set')
     if not isinstance(obj, dict):
         raise Exception('Invalid attestation set')
+
+    def decode_ao(ao_bytes):
+        if hasattr(AttestationObject, 'KEY'):  # <0.9
+            return AttestationObject(ao_bytes)
+        else:                   # >=0.9
+            numeric = cbor.decode(ao_bytes)
+            nominal = {
+                'fmt': numeric[1],
+                'authData': numeric[2],
+                'attStmt': numeric[3],
+            }
+            return AttestationObject(cbor.encode(nominal))
+
     # XXX validate schema
     return {
-        credential_id: AttestationObject(ao_bytes)
+        credential_id: decode_ao(ao_bytes)
         for credential_id, ao_bytes in obj.items()
     }
 

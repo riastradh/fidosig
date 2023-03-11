@@ -17,6 +17,8 @@
 
 import threading
 
+import fido2.client
+
 from fido2.client import Fido2Client
 from fido2.hid import STATUS
 from fido2.webauthn import PublicKeyCredentialDescriptor
@@ -58,27 +60,54 @@ def cred(rp, user, credset=None, attset=None, prompt=None):
     lock = threading.Lock()
     prompted = [False]
 
-    def on_keepalive(status):
-        if status == STATUS.UPNEEDED:
-            done = False
-            with lock:
-                done = prompted[0]
-                prompted[0] = True
-            if not done:
-                prompt()
+    def prompt_up():
+        done = False
+        with lock:
+            done = prompted[0]
+            prompted[0] = True
+        if not done:
+            prompt()
 
     def per_device(dev, cancel_ev=None):
-        client = Fido2Client(dev, fidosig_origin(rp['id']), verify_origin)
-        return client.make_credential(
-            create_options['publicKey'],
-            on_keepalive=on_keepalive if prompt is not None else None,
-            **({} if cancel_ev is None else {'event': cancel_ev})
-        )
+        if hasattr(fido2.client, 'UserInteraction'):
+            # >=0.9
+            class UserInteraction(fido2.client.UserInteraction):
+                def prompt_up(self):
+                    prompt_up()
+
+                def request_pin(self, *args, **kwargs):
+                    return None         # XXX pin
+
+                def request_uv(self, *args, **kwargs):
+                    return True
+
+            client = Fido2Client(
+                dev, fidosig_origin(rp['id']), verify_origin,
+                user_interaction=UserInteraction()
+            )
+            attresponse = client.make_credential(
+                create_options['publicKey'],
+                **({} if cancel_ev is None else {'event': cancel_ev})
+            )
+            return attresponse.attestation_object, attresponse.client_data
+        else:
+            # <0.9
+            def on_keepalive(status):
+                if status == STATUS.UPNEEDED:
+                    prompt_up()
+
+            client = Fido2Client(dev, fidosig_origin(rp['id']), verify_origin)
+            return client.make_credential(
+                create_options['publicKey'],
+                on_keepalive=on_keepalive if prompt is not None else None,
+                **({} if cancel_ev is None else {'event': cancel_ev})
+            )
 
     attestation_object, client_data = iterdevs(per_device)
-
     auth_data = server.register_complete(
-        state, client_data, attestation_object
+        state,
+        client_data,
+        attestation_object,
     )
 
     credential_id = auth_data.credential_data.credential_id
