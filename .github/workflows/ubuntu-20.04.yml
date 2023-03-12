@@ -1,0 +1,41 @@
+name: fidosig on ubuntu-20.04
+
+on:
+  push:
+    paths-ignore:
+    - .gitignore
+    - FORMAT.md
+    - LICENSE
+    - README.md
+    - VERSIOn
+  pull_request:
+    paths-ignore:
+    - .gitignore
+    - FORMAT.md
+    - LICENSE
+    - README.md
+    - VERSION
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        # Check out all history including tags.  XXX Can I just check
+        # out to the most recent tag?
+        fetch-depth: 0
+    - name: install dependencies
+      run: >
+        sudo apt-get update &&
+        sudo apt-get install \
+          git \
+          python3 \
+          python3-fido2 \
+          python3-flake8 \
+          python3-pytest \
+          ;
+    - name: make check
+      run: >
+        make check
