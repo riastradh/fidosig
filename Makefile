@@ -14,7 +14,7 @@ sdist: .PHONY
 	$(PYTHON) setup.py sdist
 
 publicsuffix: .PHONY
-	$(FETCH) data/public_suffix_list.dat \
+	$(FETCH) src/data/public_suffix_list.dat \
 		https://publicsuffix.org/list/public_suffix_list.dat
 
 lint: .PHONY
