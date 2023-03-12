@@ -107,10 +107,6 @@ def sign(
         if not done:
             prompt()
 
-    def on_keepalive(status):
-        if status == STATUS.UPNEEDED:
-            prompt_up()
-
     def per_device(dev, cancel_ev=None):
         if hasattr(fido2.client, 'UserInteraction'):
             # >=0.9
