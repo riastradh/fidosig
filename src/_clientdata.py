@@ -26,6 +26,11 @@ try:                            # >=0.9
                 assert 'crossOrigin' not in kwargs
                 kwargs['crossOrigin'] = kwargs['cross_origin']
                 del kwargs['cross_origin']
+            # XXX This must be canonicalized into the particular form
+            # used by Python json.dumps as called by python-fido2<0.9.
+            # In particular, this must guarantee a particular order of
+            # entries.  Otherwise, older signers and newer verifiers,
+            # or vice versa, may disagree!
             return cls(json.dumps(kwargs).encode())
 
     class WEBAUTHN_TYPE:
