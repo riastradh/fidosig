@@ -19,25 +19,6 @@ import os
 
 from hashlib import sha256
 
-try:                            # >=0.9
-    from fido2.webauthn import CollectedClientData
-
-    class ClientData(CollectedClientData):
-        @classmethod
-        def build(cls, **kwargs):
-            import json
-            if 'cross_origin' in kwargs:
-                assert 'crossOrigin' not in kwargs
-                kwargs['crossOrigin'] = kwargs['cross_origin']
-                del kwargs['cross_origin']
-            return cls(json.dumps(kwargs).encode())
-
-    class WEBAUTHN_TYPE:
-        MAKE_CREDENTIAL = CollectedClientData.TYPE.CREATE
-        GET_ASSERTION = CollectedClientData.TYPE.GET
-except ImportError:             # <0.9
-    from fido2.client import ClientData
-    from fido2.client import WEBAUTHN_TYPE
 from fido2.ctap2 import AssertionResponse
 try:
     from fido2.features import webauthn_json_mapping
@@ -54,6 +35,8 @@ from fido2.webauthn import PublicKeyCredentialDescriptor
 from fido2.webauthn import PublicKeyCredentialType
 from fido2.webauthn import UserVerificationRequirement
 
+from ._clientdata import ClientData
+from ._clientdata import WEBAUTHN_TYPE
 from ._data import SIGENTRY
 from ._data import credset_decode
 from ._data import sigset_decode
