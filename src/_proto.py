@@ -15,16 +15,11 @@
 #  limitations under the License.
 
 
-import six
-
 from hashlib import sha256
-from six.moves.urllib.parse import urlparse
 
 from fido2 import cbor
 from fido2.server import Fido2Server
 from fido2.webauthn import AttestationConveyancePreference
-
-from ._pubsuffix import public_suffixes
 
 
 SCHEME = 'fidosig'
@@ -35,22 +30,13 @@ def fidosig_origin(rp_id):
 
 
 def verify_origin(rp_id, origin):
-    # Derived from fido2.rpid.verify_rp_id.
-    if isinstance(rp_id, six.binary_type):
-        rp_id = rp_id.decode()
-    if not rp_id:
-        return False
-    if isinstance(origin, six.binary_type):
-        origin = origin.decode()
-
-    url = urlparse(origin)
-    if url.scheme != SCHEME:
-        return False
-    if url.hostname == rp_id:
-        return True
-    if url.hostname.endswith('.' + rp_id) and rp_id not in public_suffixes:
-        return True
-    return False
+    # In the server/client and host/device interactions, we control the
+    # server, client, and host roles alike, so the origin returned by
+    # the client to the server should always be what fidosig_origin
+    # returns; any mismatch here implies some internal bug in fidosig.
+    if origin != fidosig_origin(rp_id):
+        raise Exception('Internal error: fidosig origin and rpid mismatch')
+    return True
 
 
 def rp_origin_verifier(rp_id):
