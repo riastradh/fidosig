@@ -28,8 +28,8 @@ from fidosig.softsign import softsign
 from fidosig.verify import verify
 
 
-RP = {'id': 'example.com', 'name': 'Example LLC'}
-USER = {'id': b'falken', 'name': 'Falken', 'display_name': 'Professor Falken'}
+RP = {"id": "example.com", "name": "Example LLC"}
+USER = {"id": "falken", "name": "Falken", "display_name": "Professor Falken"}
 MSG = b'hello world\n'
 HDR = b'msg'
 NOTRANDOM24 = bytes(range(24))
