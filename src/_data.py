@@ -36,13 +36,13 @@ class Header:
     SOFTKEY = b'FIDOSIGK'
 
 
-def _encap(header, obj):
-    payload = cbor.encode(obj)
+def _encapextra(header, obj, extra):
+    payload = cbor.encode(obj) + extra
     checksum = crc32(header + payload) & 0xffffffff
     return header + payload + struct.pack('<I', checksum)
 
 
-def _decap(header, blob, typename):
+def _decapextra(header, blob, typename):
     if not blob.startswith(header) or \
        len(blob) < len(header) + 4:
         raise Exception('Invalid %s' % (typename,))
@@ -50,7 +50,18 @@ def _decap(header, blob, typename):
     computed_checksum = crc32(blob[:-4]) & 0xffffffff
     if stored_checksum != computed_checksum:
         raise Exception('Checksum failure in %s' % (typename,))
-    return cbor.decode(blob[len(header):-4])
+    return cbor.decode_from(blob[len(header):-4])
+
+
+def _encap(header, obj):
+    return _encapextra(header, obj, b'')
+
+
+def _decap(header, blob, typename):
+    obj, extra = _decapextra(header, blob, b'')
+    if extra != b'':
+        raise Exception('Invalid %s' % (typename,))
+    return obj
 
 
 def credset_encode(credset_dict):
