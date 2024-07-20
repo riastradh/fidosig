@@ -32,6 +32,7 @@ class Header:
     # Avoid collisions with Challenge in proto.py.
     CREDSET = b'FIDOSIGC'
     ATTSET = b'FIDOSIGA'
+    SIGNEDMSG = b'FIDOSIGM'
     SIGSET = b'FIDOSIGS'
     SOFTKEY = b'FIDOSIGK'
 
@@ -131,6 +132,21 @@ def sigset_decode(sigset):
         raise Exception('Invalid signature set')
     # XXX validate schema
     return sigset_dict
+
+
+def signedmsg_encode(sigset_dict, msg):
+    assert isinstance(sigset_dict, dict)
+    assert isinstance(msg, bytes)
+    return _encapextra(Header.SIGNEDMSG, sigset_dict, msg)
+
+
+def signedmsg_decode(signedmsg):
+    sigset_dict, msg = \
+        _decapextra(Header.SIGNEDMSG, signedmsg, 'signed message')
+    if not isinstance(sigset_dict, dict):
+        raise Exception('Invalid signed message')
+    # XXX validate schema
+    return sigset_dict, msg
 
 
 class SIGENTRY:

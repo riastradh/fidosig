@@ -28,7 +28,7 @@ def listcreds(blob):
         return sorted(credset_decode(blob).keys())
     elif header == Header.ATTSET:
         return sorted(attset_decode(blob).keys())
-    elif header == Header.SIGSET:
+    elif header == Header.SIGSET or header == Header.SIGNEDMSG:
         raise Exception('do not list signatories without verifying them')
     elif header == Header.SOFTKEY:
         raise Exception('softkeys do not store credentials')

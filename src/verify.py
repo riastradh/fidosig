@@ -29,15 +29,26 @@ from ._clientdata import ClientData
 from ._clientdata import WEBAUTHN_TYPE
 from ._data import SIGENTRY
 from ._data import credset_decode
+from ._data import signedmsg_decode
 from ._data import sigset_decode
 from ._proto import fidosig_origin
 from ._proto import sign_challenge
 from ._proto import sign_server
 
 
+def inlineverify(rp, credset, signedmsg, header=None):
+    sigset_dict, msg = signedmsg_decode(signedmsg)
+    signers = _verify(rp, credset, msg, sigset_dict, header=header)
+    return signers, msg if signers else None
+
+
 def verify(rp, credset, msg, sigset, header=None):
-    credset_dict = credset_decode(credset)
     sigset_dict = sigset_decode(sigset)
+    return _verify(rp, credset, msg, sigset_dict, header=header)
+
+
+def _verify(rp, credset, msg, sigset_dict, header=None):
+    credset_dict = credset_decode(credset)
     if header is None:
         header = b''
     assert isinstance(header, bytes)    # bytes, not Unicode text

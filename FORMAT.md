@@ -46,7 +46,8 @@ Tags
 
 - `FIDOSIGC` -- credential set
 - `FIDOSIGA` -- device attestation set
-- `FIDOSIGS` -- signature set
+- `FIDOSIGM` -- signed message
+- `FIDOSIGS` -- detached signature set
 - `FIDOSIGK` -- private seed for softkey
 
 Additionally, some tags are reserved to derive challenges:
@@ -91,7 +92,32 @@ offset	length	data
 *	4	zlib crc32 checksum
 ```
 
-### Signature set
+### Signed message
+
+offset  length  data
+0	8	`FIDOSIGM' in US-ASCII (M for `message')
+8	*	CBOR map of credential_id to CBOR map with
+		0: 24-byte randomization (byte string)
+		1: authenticator_data (byte string)
+			0	32	rpIdHash
+			32	1	flags
+			33	4	signature count
+			37	*	extensions (CBOR)
+		(CBOR encoding is self-delimiting)
+*	*	message data
+*	4	zlib crc32 checksum
+
+Signing challenge is SHA-256 hash computed over:
+
+```
+offset	length	data
+0	8	`FIDOSIGH' in US-ASCII (H for `cHallenge')
+8	24	randomization
+32	*	CBOR encoding of rp, relying party, map
+*	*	message data
+```
+
+### Detached signature set
 
 ```
 offset	length	data

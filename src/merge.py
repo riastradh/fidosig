@@ -20,6 +20,8 @@ from ._data import attset_decode
 from ._data import attset_encode
 from ._data import credset_decode
 from ._data import credset_encode
+from ._data import signedmsg_decode
+from ._data import signedmsg_encode
 from ._data import sigset_decode
 from ._data import sigset_encode
 
@@ -37,6 +39,16 @@ def merge(blobs):
         return attset_encode(_merge(map(attset_decode, blobs)))
     elif header == Header.SIGSET:
         return sigset_encode(_merge(map(sigset_decode, blobs)))
+    elif header == Header.SIGNEDMSG:
+        results = list(map(signedmsg_decode, blobs))
+        sigset_dicts = (sigset_dict for sigset_dict, _msg in results)
+        msgs = (msg for _sigset_dict, msg in results)
+        msg = next(msgs)
+        # XXX verify header somehow
+        for msg_ in msgs:
+            if msg_ != msg:
+                raise Exception('mismatched signed message')
+        return signedmsg_encode(_merge(sigset_dicts), msg)
     else:
         raise Exception('unknown file type')
 

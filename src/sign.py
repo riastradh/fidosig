@@ -59,6 +59,8 @@ from fido2.webauthn import UserVerificationRequirement
 
 from ._data import SIGENTRY
 from ._data import credset_decode
+from ._data import signedmsg_decode
+from ._data import signedmsg_encode
 from ._data import sigset_decode
 from ._data import sigset_encode
 from ._iterdevs import iterdevs
@@ -68,12 +70,40 @@ from ._proto import sign_server
 from ._proto import verify_origin
 
 
+def inlinesign(
+        rp, credset, msg, signedmsg=None, header=None, randomization=None,
+        prompt=None
+):
+    if signedmsg:
+        sigset_dict, msg1 = signedmsg_decode(signedmsg)
+        if msg != msg1:
+            raise Exception('Mismatched signed message')
+    else:
+        sigset_dict = {}
+    _sign(
+        rp, credset, msg, sigset_dict,
+        header=header, randomization=randomization, prompt=prompt
+    )
+    return signedmsg_encode(sigset_dict, msg)
+
+
 def sign(
         rp, credset, msg, sigset=None, header=None, randomization=None,
         prompt=None
 ):
-    credset_dict = credset_decode(credset)
     sigset_dict = {} if sigset is None else sigset_decode(sigset)
+    _sign(
+        rp, credset, msg, sigset_dict,
+        header=header, randomization=randomization, prompt=prompt
+    )
+    return sigset_encode(sigset_dict)
+
+
+def _sign(
+        rp, credset, msg, sigset_dict, header, randomization=None,
+        prompt=None
+):
+    credset_dict = credset_decode(credset)
     if header is None:
         header = b''
     assert isinstance(header, bytes)    # bytes, not Unicode text
@@ -173,5 +203,3 @@ def sign(
             SIGENTRY.AUTH_DATA: assertions[0].auth_data,
             SIGENTRY.SIGNATURE: assertions[0].signature,
         }
-
-    return sigset_encode(sigset_dict)

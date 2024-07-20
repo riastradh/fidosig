@@ -17,7 +17,9 @@
 
 import base64
 import pytest
+import struct
 
+from fidosig._crc import crc32
 from fidosig._data import credid_internalize
 from fidosig.attest import attest
 from fidosig.list import listcreds
@@ -25,6 +27,7 @@ from fidosig.merge import merge
 from fidosig.softcred import softcred
 from fidosig.softkey import softkeygen
 from fidosig.softsign import softsign
+from fidosig.verify import inlineverify
 from fidosig.verify import verify
 
 
@@ -33,6 +36,12 @@ USER = {"id": "falken", "name": "Falken", "display_name": "Professor Falken"}
 MSG = b'hello world\n'
 HDR = b'msg'
 NOTRANDOM24 = bytes(range(24))
+
+
+# XXX test empty credential set
+# XXX test empty signature set
+# XXX test signed message with empty signature set
+
 
 CREDSET1 = base64.b64decode('''
 RklET1NJR0OhWED6J242E/l1QWiGa6BODTVstzQM2luNPAMCPSV3f8nV9rNT2n12rkLwTvPOUgnO
@@ -72,6 +81,14 @@ RklET1NJR1OhWED6J242E/l1QWiGa6BODTVstzQM2luNPAMCPSV3f8nV9rNT2n12rkLwTvPOUgnO
 Yz5AG+tg4X/AeJBoiQPL8fQzowBYGNWk+iH4oOEjXSIaP1vlLr1NRs2WysZ6xwFYJaN5pvbur7ml
 XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAAAwCWEgwRgIhALOaeEbmEhAVftaVomrzuy7acGeJ
 f0hjgsvR0vedmfKzAiEA38pCpgXAy5OGqanLDnZyRMnyKV+d5w9AizDh1EOLAoGz8sRT
+''')
+
+SIGNEDMSG1 = base64.b64decode('''
+RklET1NJR02hWED6J242E/l1QWiGa6BODTVstzQM2luNPAMCPSV3f8nV9rNT2n12rkLwTvPOUgnO
+Yz5AG+tg4X/AeJBoiQPL8fQzowBYGNWk+iH4oOEjXSIaP1vlLr1NRs2WysZ6xwFYJaN5pvbur7ml
+XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAAAwCWEgwRgIhALOaeEbmEhAVftaVomrzuy7acGeJ
+f0hjgsvR0vedmfKzAiEA38pCpgXAy5OGqanLDnZyRMnyKV+d5w9AizDh1EOLAoFoZWxsbyB3b3Js
+ZApKouK8
 ''')
 
 CREDSET2 = base64.b64decode('''
@@ -114,6 +131,38 @@ XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAAAoCWEcwRQIhAKbRA+3rMBJTYTbv6QjoaqKa7Jmo
 bddPedMZqJy7nCD6AiByedZgPBsCcJKR7rq28WpCgZaFxM5NIiSuFaFlUXBhx+dzDiw=
 ''')
 
+SIGNEDMSG2 = base64.b64decode('''
+RklET1NJR02hWEBawv9RIgiM7W7AbQ8A/E0h+px0ktzFnUTymUcDAlY42rAp8p2vObbhj5RC/A50
+f/PewSUh/hplzA5QgYca2ODsowBYGPPBvZMCDw0iOXSDk2dzwHx1g9/d5xUaSAFYJaN5pvbur7ml
+XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAAAoCWEcwRQIhAKbRA+3rMBJTYTbv6QjoaqKa7Jmo
+bddPedMZqJy7nCD6AiByedZgPBsCcJKR7rq28WpCgZaFxM5NIiSuFaFlUXBhx2hlbGxvIHdvcmxk
+CuN3muQ=
+''')
+
+
+MSG3 = b'foo bar baz\n'
+
+CREDSET3 = CREDSET2
+
+CREDID3 = CREDID2
+
+ATTSET3 = ATTSET2
+
+SIG3 = base64.b64decode('''
+RklET1NJR1OhWEBawv9RIgiM7W7AbQ8A/E0h+px0ktzFnUTymUcDAlY42rAp8p2vObbhj5RC/A50
+f/PewSUh/hplzA5QgYca2ODsowBYGKbWsgsSZvhIYP+NJHuvyPbZNZ6XypmVqQFYJaN5pvbur7ml
+XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAD6ICWEcwRQIhANTRVgNzQgEHNVa0DhKZCW7DFJB4
+QL2vTAMutlE70g+TAiBCzgc+Qcse2Ul9pRKxvn2nF7AeS2TtptGiDyeCxxxt4NSwoLk=
+''')
+
+SIGNEDMSG3 = base64.b64decode('''
+RklET1NJR02hWEBawv9RIgiM7W7AbQ8A/E0h+px0ktzFnUTymUcDAlY42rAp8p2vObbhj5RC/A50
+f/PewSUh/hplzA5QgYca2ODsowBYGKbWsgsSZvhIYP+NJHuvyPbZNZ6XypmVqQFYJaN5pvbur7ml
+XjeMEYA04nUeaC+rny0wqxPSElWGzhlHAQAAD6ICWEcwRQIhANTRVgNzQgEHNVa0DhKZCW7DFJB4
+QL2vTAMutlE70g+TAiBCzgc+Qcse2Ul9pRKxvn2nF7AeS2TtptGiDyeCxxxt4GZvbyBiYXIgYmF6
+CtvqbS8=
+''')
+
 
 def test_list_merge():
     assert listcreds(CREDSET1) == [CREDID1]
@@ -134,9 +183,34 @@ def test_list_rejects_sigset2():
         listcreds(SIG2)
 
 
+def test_list_rejects_sigset3():
+    with pytest.raises(Exception):
+        listcreds(SIG3)
+
+
 def test_list_rejects_sigset():
     with pytest.raises(Exception):
         listcreds(merge([SIG1, SIG2]))
+
+
+def test_list_rejects_signedmsg1():
+    with pytest.raises(Exception):
+        listcreds(SIGNEDMSG1)
+
+
+def test_list_rejects_signedmsg2():
+    with pytest.raises(Exception):
+        listcreds(SIGNEDMSG2)
+
+
+def test_list_rejects_signedmsg3():
+    with pytest.raises(Exception):
+        listcreds(SIGNEDMSG3)
+
+
+def test_list_rejects_signedmsg():
+    with pytest.raises(Exception):
+        listcreds(merge([SIGNEDMSG1, SIGNEDMSG2]))
 
 
 def test_attest():
@@ -165,20 +239,76 @@ def test_verify():
     assert verify(RP, CREDSET1, MSG, allsigs, HDR) == set([CREDID1])
     assert verify(RP, CREDSET2, MSG, allsigs, HDR) == set([CREDID2])
     assert verify(RP, allcreds, MSG, allsigs, HDR) == set([CREDID1, CREDID2])
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # empty header
         verify(RP, CREDSET1, MSG, SIG1)
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # empty header
         verify(RP, CREDSET2, MSG, SIG2)
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # empty header
         verify(RP, allcreds, MSG, allsigs)
     assert verify(RP, CREDSET1, MSG, SIG2, HDR) == set([])
     assert verify(RP, CREDSET2, MSG, SIG1, HDR) == set([])
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # modified message
         verify(RP, CREDSET1, MSG + b'\0', SIG1, HDR)
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # modified message
         verify(RP, CREDSET2, MSG + b'\0', SIG2, HDR)
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):      # modified message
         verify(RP, allcreds, MSG + b'\0', allsigs, HDR)
+
+
+def tweaksignedmsg(signedmsg, error=None, suffix=None):
+    assert signedmsg.startswith(b'FIDOSIGM')
+    content = signedmsg[:-4]    # strip checksum
+    if error:
+        n = len(content)
+        if error < 0:
+            error = 8*len(content) + error
+        content = (int.from_bytes(content) ^ (1 << error)).to_bytes(n)
+    if suffix:
+        content += suffix
+    checksum = crc32(content) & 0xffffffff
+    return content + struct.pack('<I', checksum)
+
+
+def test_inlineverify():
+    allcreds = merge([CREDSET1, CREDSET2])
+    allsignedmsg = merge([SIGNEDMSG1, SIGNEDMSG2])
+    assert inlineverify(RP, CREDSET1, SIGNEDMSG1, HDR) == (set([CREDID1]), MSG)
+    assert inlineverify(RP, CREDSET2, SIGNEDMSG2, HDR) == (set([CREDID2]), MSG)
+    assert inlineverify(RP, allcreds, allsignedmsg, HDR) == \
+        (set([CREDID1, CREDID2]), MSG)
+    with pytest.raises(Exception):      # empty header
+        inlineverify(RP, CREDSET1, SIGNEDMSG1)
+    with pytest.raises(Exception):      # empty header
+        inlineverify(RP, CREDSET2, SIGNEDMSG2)
+    with pytest.raises(Exception):      # empty header
+        inlineverify(RP, allcreds, allsignedmsg)
+    assert inlineverify(RP, CREDSET1, SIGNEDMSG2, HDR) == (set([]), None)
+    assert inlineverify(RP, CREDSET2, SIGNEDMSG1, HDR) == (set([]), None)
+    flippedbit1 = tweaksignedmsg(SIGNEDMSG1, error=-33)
+    garbagedata1 = tweaksignedmsg(SIGNEDMSG1, suffix=b'\0')
+    flippedbit2 = tweaksignedmsg(SIGNEDMSG2, error=-33)
+    garbagedata2 = tweaksignedmsg(SIGNEDMSG2, suffix=b'\0')
+    allflippedbit = tweaksignedmsg(allsignedmsg, error=-33)
+    allgarbagedata = tweaksignedmsg(allsignedmsg, suffix=b'\0')
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, CREDSET1, flippedbit1, HDR)
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, CREDSET1, garbagedata1, HDR)
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, CREDSET2, flippedbit2, HDR)
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, CREDSET2, garbagedata2, HDR)
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, allcreds, allflippedbit, HDR)
+    with pytest.raises(Exception):      # modified message
+        inlineverify(RP, allcreds, allgarbagedata, HDR)
+
+
+def test_verify_signedmsg_mismatch():
+    with pytest.raises(Exception):
+        merge([SIGNEDMSG1, SIGNEDMSG3])
+    with pytest.raises(Exception):
+        merge([SIGNEDMSG2, SIGNEDMSG3])
 
 
 def test_softkey():

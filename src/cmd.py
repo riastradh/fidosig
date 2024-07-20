@@ -25,10 +25,12 @@ from .attest import attest
 from .cred import cred
 from .list import listcreds
 from .merge import merge
+from .sign import inlinesign
 from .sign import sign
 from .softcred import softcred
 from .softkey import softkeygen
 from .softsign import softsign
+from .verify import inlineverify
 from .verify import verify
 
 
@@ -62,6 +64,10 @@ def cmd(argv, stdin, stdout, stderr):
 def usage(out):
     out.write('Usage: %s attest <credset> <attset>\n' % (progname,))
     out.write('       %s cred [-a] <credset> [<attset>]\n' % (progname,))
+    out.write('       %s inlinesign [-a] <credset> <msg> <signedmsg>\n' %
+              (progname,))
+    out.write('       %s inlineverify [-a] <credset> <msg> <signedmsg>\n' %
+              (progname,))
     out.write('       %s list <file>\n' % (progname,))
     out.write('       %s merge [-a] <output> <inputs>...\n' % (progname,))
     out.write('       %s sign [-a] <credset> <msg> <sigset>\n' % (progname,))
@@ -293,6 +299,181 @@ def cmd_cred(args, stdin, stdout, stderr):
     if attset_path:
         _write_file(attset, attset_path, stdout, append=append)
     return 0
+
+
+def usage_inlinesign(out):
+    out.write('Usage: %s inlinesign [-a] <credset> <msg> <signedmsg>\n' %
+              (progname,))
+    out.write('\n')
+    out.write('  Sign the message in <msg> with any credentials in\n')
+    out.write("  <credset> on the user's available tokens and store the\n")
+    out.write('  resulting signed message in <signedmsg>.\n')
+    out.write('\n')
+    out.write('  The signed message, including signatures, must be at most\n')
+    out.write('  64 MB (67108864 bytes).\n')
+    out.write('\n')
+    out.write('  -a    append to signatures in signed message if it is\n')
+    out.write('        already there, else create new signed message\n')
+    out.write('  -H <header>\n')
+    out.write('        use <header> as header instead of file name <msg>\n')
+    out.write('  -r, --rp <rpid>\n')
+    out.write('        set the relying party id\n')
+
+
+def cmd_inlinesign(args, stdin, stdout, stderr):
+    try:
+        opts, args = getopt.getopt(args, 'ahH:r:', [
+            'append',
+            'header',
+            'help',
+            'rp',
+        ])
+    except getopt.GetoptError as e:
+        stderr.write('%s\n' % (str(e),))
+        usage_inlinesign(stderr)
+        return 1
+
+    append = False
+    header = None
+    rp_id = None
+    errors = []
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage_inlinesign(stdout)
+            return 0
+        elif o in ('-a', '--append'):
+            append = True
+        elif o in ('-H', '--header'):
+            if header is not None:
+                errors.append('duplicate header')
+                continue
+            header = a
+        elif o in ('-r', '--rp'):
+            if rp_id is not None:
+                errors.append('duplicate rp')
+                continue
+            rp_id = a
+        else:
+            assert False, 'invalid option'
+    if errors or len(args) != 3:
+        for error in errors:
+            stderr.write('%s\n' % (error,))
+        usage_inlinesign(stderr)
+        return 1
+
+    [credset_path, msg_path, signedmsg_path] = args
+
+    header = _get_header(header, msg_path, stderr)
+    rp = _get_rp(rp_id)
+
+    credset = _read_file(credset_path, stdin)
+    msg = _read_file(msg_path, stdin, maxbytes=64 * 1024 * 1024)
+    signedmsg = \
+        _read_file(signedmsg_path, stdin, append=True) if append else None
+
+    prompted = [False]
+
+    def prompt():
+        stderr.write('tap key; waiting...')
+        stderr.flush()
+        prompted[0] = True
+
+    try:
+        try:
+            signedmsg = inlinesign(
+                rp, credset, msg, header=header, signedmsg=signedmsg,
+                prompt=prompt
+            )
+        finally:
+            if prompted[0]:
+                stderr.write('\n')
+                stderr.flush()
+    except FileNotFoundError:
+        stderr.write('no keys found\n')
+        return 1
+
+    _write_file(signedmsg, signedmsg_path, stdout, append=append)
+    return 0
+
+
+def usage_inlineverify(out):
+    out.write('Usage: %s inlineverify <credset> <msg> <signedmsg>\n' %
+              (progname,))
+    out.write('\n')
+    out.write('  Verify signatures in <signedmsg> and store message in\n')
+    out.write('  <msg> if there is at least one signature by a credential\n')
+    out.write('  in <credset> and all signatures from any credentials in\n')
+    out.write('  <credset> are valid.\n')
+    out.write('\n')
+    out.write('  For every credential in <credset> with a valid signature\n')
+    out.write('  in <signedmsg>, print its base64url-encoded credential id,\n')
+    out.write('  one per line.\n')
+    out.write('\n')
+    out.write("  <msg> MUST NOT be `-' to mean standard output.\n")
+    out.write('\n')
+    out.write('Options:\n')
+    out.write('  -H <header>\n')
+    out.write('        use <header> as header instead of file name <msg>\n')
+    out.write('  -r, --rp <rpid>\n')
+    out.write('        set the relying party id\n')
+
+
+def cmd_inlineverify(args, stdin, stdout, stderr):
+    try:
+        opts, args = getopt.getopt(args, 'hH:r:', [
+            'header',
+            'help',
+            'rp',
+        ])
+    except getopt.GetoptError as e:
+        stderr.write('%s\n' % (str(e),))
+        usage_inlineverify(stderr)
+        return 1
+
+    header = None
+    rp_id = None
+    errors = []
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage_inlineverify(stdout)
+            return 0
+        elif o in ('-H', '--header'):
+            if header is not None:
+                errors.append('duplicate header')
+                continue
+            header = a
+        elif o in ('-r', '--rp'):
+            if rp_id is not None:
+                errors.append('duplicate rp')
+                continue
+            rp_id = a
+        else:
+            assert False, 'invalid option'
+    if errors or len(args) != 3:
+        for error in errors:
+            stderr.write('%s\n' % (error,))
+        usage_inlineverify(stderr)
+        return 1
+
+    [credset_path, msg_path, signedmsg_path] = args
+    if msg_path == '-':
+        stderr.write('inlineverify output must be separate file, not stdout\n')
+        return 1
+
+    header = _get_header(header, msg_path, stderr)
+    rp = _get_rp(rp_id)
+
+    credset = _read_file(credset_path, stdin)
+    signedmsg = _read_file(signedmsg_path, stdin, maxbytes=64 * 1024 * 1024)
+    verified, msg = inlineverify(rp, credset, signedmsg, header=header)
+    if verified:
+        _write_file(msg, msg_path, None, maxbytes=64 * 1024 * 1024)
+        for credential_id in sorted(verified):
+            extcredid = credid_externalize(credential_id)
+            stdout.buffer.write(b'%s\n' % (extcredid,))
+        return 0
+    else:
+        return 1
 
 
 def usage_list(out):
@@ -723,6 +904,8 @@ def cmd_verify(args, stdin, stdout, stderr):
 CMDS = {
     'attest': cmd_attest,
     'cred': cmd_cred,
+    'inlinesign': cmd_inlinesign,
+    'inlineverify': cmd_inlineverify,
     'list': cmd_list,
     'merge': cmd_merge,
     'sign': cmd_sign,
