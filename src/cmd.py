@@ -81,13 +81,19 @@ def usage(out):
 
 
 def _get_rp(rp_id):
-    # XXX
-    return json.loads(os.getenv('FIDOSIG_RP'))
+    if rp_id is None:
+        rp_id = os.getenv('FIDOSIG_RP')
+    if rp_id is None:
+        raise Exception('No relying party id specified')
+    return json.loads(rp_id)
 
 
 def _get_user(user_id):
-    # XXX
-    user = json.loads(os.getenv('FIDOSIG_USER'))
+    if user_id is None:
+        user_id = os.getenv('FIDOSIG_USER')
+    if user_id is None:
+        raise Exception('No user id specified')
+    user = json.loads(user_id)
     user['id'] = user['id'].encode('utf-8')
     return user
 
