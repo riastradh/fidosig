@@ -612,7 +612,7 @@ def usage_sign(out):
     out.write('Options:\n')
     out.write('  -a    append to set if it is already there, else create\n')
     out.write('  -H <header>\n')
-    out.write('        use <header> as header instead of file name\n')
+    out.write('        use <header> as header instead of file name <msg>\n')
     out.write('  -r, --rp <rpid>\n')
     out.write('        set the relying party id\n')
 
@@ -806,7 +806,7 @@ def usage_softsign(out):
     out.write('Options:\n')
     out.write('  -a    append to set if it is already there, else create\n')
     out.write('  -H <header>\n')
-    out.write('        use <header> as header instead of file name\n')
+    out.write('        use <header> as header instead of file name <msg>\n')
     out.write('  -r, --rp <rpid>\n')
     out.write('        set the relying party id\n')
 
@@ -875,7 +875,7 @@ def cmd_softsign(args, stdin, stdout, stderr):
 
 
 def usage_verify(out):
-    out.write('Usage: %s <credset> <msg> <sigset>\n' % (progname,))
+    out.write('Usage: %s verify <credset> <msg> <sigset>\n' % (progname,))
     out.write('\n')
     out.write('  Verify signatures on <msg>.  For every credential\n')
     out.write('  in <credset> with a valid signature on <msg> in\n')
@@ -884,7 +884,7 @@ def usage_verify(out):
     out.write('\n')
     out.write('Options:\n')
     out.write('  -H <header>\n')
-    out.write('        use <header> as header instead of file name\n')
+    out.write('        use <header> as header instead of file name <msg>\n')
     out.write('  -r, --rp <rpid>\n')
     out.write('        set the relying party id\n')
 
