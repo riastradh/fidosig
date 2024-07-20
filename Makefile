@@ -2,7 +2,7 @@ default-target: all
 default-target: .PHONY
 .PHONY:
 
-PYTHON = python
+PYTHON = python3
 
 FETCH = curl -L -o
 
