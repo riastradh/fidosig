@@ -21,6 +21,7 @@ import os
 
 
 from ._data import credid_externalize
+from ._dump import dump
 from .attest import attest
 from .cred import cred
 from .list import listcreds
@@ -298,6 +299,45 @@ def cmd_cred(args, stdin, stdout, stderr):
     _write_file(credset, credset_path, stdout, append=append)
     if attset_path:
         _write_file(attset, attset_path, stdout, append=append)
+    return 0
+
+
+def usage_dump(out):
+    out.write('Usage: %s dump <file>\n' % (progname,))
+    out.write('\n')
+    out.write('  Dump the internal structure of <file> human-readably.\n')
+    out.write('\n')
+    out.write('  WARNING: This is a debugging operation only.  Do not rely\n')
+    out.write('  on the output, which may be controlled by an adversary and\n')
+    out.write('  is not verified by %s.\n' % (progname,))
+    out.write('\n')
+    out.write('  WARNING: Output format is unreliable and should not be\n')
+    out.write('  parsed by scripts.\n')
+
+
+def cmd_dump(args, stdin, stdout, stderr):
+    try:
+        opts, args = getopt.getopt(args, 'h', [
+            'help',
+        ])
+    except getopt.GetoptError as e:
+        stderr.write('%s\n' % (str(e),))
+        usage_list(stderr)
+        return 1
+
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage_list(stdout)
+            return 0
+        else:
+            assert False, 'invalid option'
+    if len(args) != 1:
+        usage_list(stderr)
+        return 1
+
+    [path] = args
+    blob = _read_file(path, stdin)      # XXX larger max size
+    dump(blob, stdout)
     return 0
 
 
@@ -904,6 +944,7 @@ def cmd_verify(args, stdin, stdout, stderr):
 CMDS = {
     'attest': cmd_attest,
     'cred': cmd_cred,
+    'dump': cmd_dump,
     'inlinesign': cmd_inlinesign,
     'inlineverify': cmd_inlineverify,
     'list': cmd_list,
