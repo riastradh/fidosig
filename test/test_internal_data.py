@@ -25,7 +25,9 @@ from fidosig._data import _decapextra
 
 def flipbit(bit, buf):
     n = len(buf)
-    buf1 = (int.from_bytes(buf) ^ (1 << bit)).to_bytes(n)
+    i = int.from_bytes(buf, byteorder='big')
+    i ^= 1 << bit
+    buf1 = i.to_bytes(n, byteorder='big')
     assert len(buf) == len(buf1)
     return buf1
 

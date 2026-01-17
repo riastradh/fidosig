@@ -262,7 +262,9 @@ def tweaksignedmsg(signedmsg, error=None, suffix=None):
         n = len(content)
         if error < 0:
             error = 8*len(content) + error
-        content = (int.from_bytes(content) ^ (1 << error)).to_bytes(n)
+        i = int.from_bytes(content, byteorder='big')
+        i ^= 1 << error
+        content = i.to_bytes(n, byteorder='big')
     if suffix:
         content += suffix
     checksum = crc32(content) & 0xffffffff
