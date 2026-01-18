@@ -98,7 +98,7 @@ setup(
     author_email='campbell+fidosig@mumble.net',
     url='https://mumble.net/~campbell/fidosig',
     license='Apache License, Version 2.0',
-    install_requires=['fido2>=0.8.1,<2.0'],
+    install_requires=['fido2>=0.8.1,<3.0'],
     tests_require=['pytest'],
     packages=['fidosig', 'fidosig.test'],
     package_dir={'fidosig': 'src', 'fidosig.test': 'test'},

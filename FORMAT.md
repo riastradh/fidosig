@@ -143,6 +143,42 @@ offset	length	data
 *	*	message data
 ```
 
+Client data hash
+----------------
+
+The FIDO signature is computed over the SHA-256 hash of a certain
+serialization of JSON data with the following structure:
+
+{
+        "type": "webauthn.get",
+        "origin": "<relying party id>",
+        "challenge": "<base64-encoded challenge as above>",
+        "clientExtensions": {}
+}
+
+The serialization uses `: ` and `, ` as separators, with no whitespace
+otherwise, and the ordering of keys as above.  If the cross-origin
+option is enabled, then it is appended at the end:
+
+{
+        "type": "webauthn.get",
+        "origin": "<relying party id>",
+        "challenge": "<base64-encoded challenge as above>",
+        "clientExtensions": {},
+        "crossOrigin": true
+}
+
+XXX This serialization is a design mistake that arose from using the
+default serialization in python-fido2 0.8.  It should instead use the
+webauthn canonical JSON encoding, which is substantively different in
+several respects -- it uses `:` and `,` rather than `: ` and `, ` as
+separators, and requires `crossOrigin` to be included, and does not
+have a `clientExtensions` dict:
+
+https://www.w3.org/TR/webauthn-2/#clientdatajson-serialization
+
+This change may be made before fidosig is considered non-experimental.
+
 CRC32
 -----
 

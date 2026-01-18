@@ -20,7 +20,11 @@ try:
 except ImportError:
     pass
 else:
-    import os.path
-    fido2.features.webauthn_json_mapping.enabled = True
-    exec(open(os.path.join(os.path.dirname(__file__), 'test_fidosig.py'))
-         .read())
+    try:
+        fido2.features.webauthn_json_mapping.enabled = True
+    except AttributeError:
+        pass
+    else:
+        import os.path
+        exec(open(os.path.join(os.path.dirname(__file__), 'test_fidosig.py'))
+             .read())

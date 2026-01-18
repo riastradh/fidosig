@@ -27,6 +27,7 @@ from fido2.webauthn import UserVerificationRequirement
 
 from ._clientdata import ClientData
 from ._clientdata import WEBAUTHN_TYPE
+from ._compat import authenticate_complete
 from ._data import SIGENTRY
 from ._data import credset_decode
 from ._data import signedmsg_decode
@@ -87,7 +88,8 @@ def _verify_1(rp, header, msg, credential_id, public_key, sig):
     )]
 
     try:
-        server.authenticate_complete(
+        authenticate_complete(
+            server,
             state,
             credentials,
             credential_id,

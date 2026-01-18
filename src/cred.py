@@ -19,11 +19,16 @@ import threading
 
 import fido2.client
 
-from fido2.client import Fido2Client
 from fido2.hid import STATUS
+try:
+    from fido2.webauthn import AuthenticatorAttestationResponse
+except ImportError:
+    pass
 from fido2.webauthn import PublicKeyCredentialDescriptor
 from fido2.webauthn import PublicKeyCredentialType
+from fido2.webauthn import UserVerificationRequirement
 
+from ._compat import Fido2Client
 from ._data import attset_decode
 from ._data import attset_encode
 from ._data import credset_decode
@@ -55,6 +60,7 @@ def cred(rp, user, credset=None, attset=None, prompt=None):
             for credential_id in sorted(credset_dict.keys())
         ],
         challenge=challenge,
+        user_verification=UserVerificationRequirement.DISCOURAGED,
     )
 
     lock = threading.Lock()
@@ -85,11 +91,30 @@ def cred(rp, user, credset=None, attset=None, prompt=None):
                 dev, fidosig_origin(rp['id']), verify_origin,
                 user_interaction=UserInteraction()
             )
-            attresponse = client.make_credential(
+            response = client.make_credential(
                 create_options['publicKey'],
                 **({} if cancel_ev is None else {'event': cancel_ev})
             )
-            return attresponse.attestation_object, attresponse.client_data
+            if isinstance(response, AuthenticatorAttestationResponse):
+                # <2.0
+                attestation_object = response.attestation_object
+                client_data = response.client_data
+                return (
+                    attestation_object,
+                    lambda: (
+                        server.register_complete(
+                            state,
+                            client_data,
+                            attestation_object
+                        )
+                    ),
+                )
+            else:               # RegistrationResponse
+                # >=2.0
+                return (
+                    response.response.attestation_object,
+                    lambda: server.register_complete(state, response),
+                )
         else:
             # <0.9
             def on_keepalive(status):
@@ -97,18 +122,24 @@ def cred(rp, user, credset=None, attset=None, prompt=None):
                     prompt_up()
 
             client = Fido2Client(dev, fidosig_origin(rp['id']), verify_origin)
-            return client.make_credential(
+            attestation_object, client_data = client.make_credential(
                 create_options['publicKey'],
                 on_keepalive=on_keepalive if prompt is not None else None,
                 **({} if cancel_ev is None else {'event': cancel_ev})
             )
+            return (
+                attestation_object,
+                lambda: (
+                    server.register_complete(
+                        state,
+                        client_data,
+                        attestation_object,
+                    )
+                ),
+            )
 
-    attestation_object, client_data = iterdevs(per_device)
-    auth_data = server.register_complete(
-        state,
-        client_data,
-        attestation_object,
-    )
+    attestation_object, register = iterdevs(per_device)
+    auth_data = register()
 
     credential_id = auth_data.credential_data.credential_id
     public_key = auth_data.credential_data.public_key

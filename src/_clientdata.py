@@ -15,23 +15,36 @@
 #  limitations under the License.
 
 
+import json
+
 try:                            # >=0.9
+    from fido2.utils import websafe_encode
     from fido2.webauthn import CollectedClientData
 
     class ClientData(CollectedClientData):
         @classmethod
-        def build(cls, **kwargs):
-            import json
-            if 'cross_origin' in kwargs:
-                assert 'crossOrigin' not in kwargs
-                kwargs['crossOrigin'] = kwargs['cross_origin']
-                del kwargs['cross_origin']
-            # XXX This must be canonicalized into the particular form
-            # used by Python json.dumps as called by python-fido2<0.9.
-            # In particular, this must guarantee a particular order of
+        def build(cls, type, origin, challenge, cross_origin=False, **kwargs):
+            if isinstance(challenge, bytes):
+                encoded_challenge = websafe_encode(challenge)
+            else:
+                encoded_challenge = challenge
+            # This must be canonicalized into the particular form used
+            # by Python json.dumps as called by python-fido2<0.9.  In
+            # particular, this must guarantee a particular order of
             # entries.  Otherwise, older signers and newer verifiers,
             # or vice versa, may disagree!
-            return cls(json.dumps(kwargs).encode())
+            data = {
+                'type': type,
+                'origin': origin,
+                'challenge': encoded_challenge,
+                'clientExtensions': kwargs.pop('clientExtensions', {}),
+            }
+            if cross_origin:
+                data['crossOrigin'] = True
+            if kwargs:
+                raise Exception('Unknown additional client data')
+            return cls(json.dumps(data, separators=(', ', ': ',)).encode())
+        create = build          # >=2.0
 
     class WEBAUTHN_TYPE:
         MAKE_CREDENTIAL = CollectedClientData.TYPE.CREATE

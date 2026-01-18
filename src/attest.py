@@ -19,6 +19,7 @@ from fido2.utils import websafe_encode
 
 from ._clientdata import ClientData
 from ._clientdata import WEBAUTHN_TYPE
+from ._compat import register_complete
 from ._data import attset_decode
 from ._data import credset_decode
 from ._proto import cred_challenge
@@ -46,8 +47,8 @@ def attest(rp, user, credset, attset):
         if credential_id not in attset_dict:
             raise Exception('Missing attestation')
         attestation_object = attset_dict[credential_id]
-        auth_data = server.register_complete(
-            state, client_data, attestation_object
+        auth_data = register_complete(
+            server, state, credential_id, client_data, attestation_object
         )
         if auth_data.credential_data.credential_id != credential_id:
             raise Exception('Wrong credential id')

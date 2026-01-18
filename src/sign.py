@@ -20,43 +20,19 @@ import threading
 
 import fido2.client
 
-from fido2.client import Fido2Client
-try:                            # >=0.9
-    from fido2.webauthn import AttestedCredentialData
-    from fido2.webauthn import CollectedClientData
-
-    class ClientData(CollectedClientData):
-        @classmethod
-        def create(cls, **kwargs):
-            kwargs['challenge'] = websafe_encode(kwargs['challenge'])
-            if 'clientExtensions' not in kwargs:
-                kwargs['clientExtensions'] = {}
-            return cls.build(**kwargs)
-
-        @classmethod
-        def build(cls, **kwargs):
-            import json
-            if 'cross_origin' in kwargs:
-                assert 'crossOrigin' not in kwargs
-                kwargs['crossOrigin'] = kwargs['cross_origin']
-                del kwargs['cross_origin']
-            return cls(json.dumps(kwargs).encode())
-
-    class Fido2ClientLegacy(Fido2Client):
-        def _build_client_data(self, typ, challenge):
-            return ClientData.create(
-                type=typ,
-                origin=self.origin,
-                challenge=challenge,
-            )
-except ImportError:             # <0.9
-    from fido2.ctap2 import AttestedCredentialData
 from fido2.hid import STATUS
-from fido2.utils import websafe_encode
+try:
+    # >=0.9
+    from fido2.webauthn import AuthenticatorAssertionResponse
+except ImportError:
+    # <0.9
+    pass
 from fido2.webauthn import PublicKeyCredentialDescriptor
 from fido2.webauthn import PublicKeyCredentialType
 from fido2.webauthn import UserVerificationRequirement
 
+from ._compat import Fido2Client
+from ._compat import authenticate_complete
 from ._data import SIGENTRY
 from ._data import credset_decode
 from ._data import signedmsg_decode
@@ -68,6 +44,11 @@ from ._proto import fidosig_origin
 from ._proto import sign_challenge
 from ._proto import sign_server
 from ._proto import verify_origin
+
+try:                            # >=0.9
+    from fido2.webauthn import AttestedCredentialData
+except ImportError:             # <0.9
+    from fido2.ctap2 import AttestedCredentialData
 
 
 def inlinesign(
@@ -150,7 +131,7 @@ def _sign(
                 def request_uv(self, *args, **kwargs):
                     return True
 
-            client = Fido2ClientLegacy(
+            client = Fido2Client(
                 dev, fidosig_origin(rp['id']), verify_origin,
                 user_interaction=UserInteraction()
             )
@@ -160,7 +141,13 @@ def _sign(
             )
             assertions = selection.get_assertions()
             attresponse = selection.get_response(0)
-            return assertions, attresponse.client_data
+            if isinstance(attresponse, AuthenticatorAssertionResponse):
+                # >=0.9, <2.0
+                client_data = attresponse.client_data
+            else:
+                # >=2.0, attresponse is an AuthenticationResponse
+                client_data = attresponse.response.client_data
+            return assertions, client_data
         else:
             # <0.9
             def on_keepalive(status):
@@ -188,7 +175,8 @@ def _sign(
         credentials = [AttestedCredentialData.create(
             b'\0' * 16, credential_id, credset_dict[credential_id],
         )]
-        server.authenticate_complete(
+        authenticate_complete(
+            server,
             state,
             credentials,
             credential_id,

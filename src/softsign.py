@@ -20,11 +20,6 @@ import os
 from hashlib import sha256
 
 from fido2.ctap2 import AssertionResponse
-try:
-    from fido2.features import webauthn_json_mapping
-except ImportError:
-    class webauthn_json_mapping:
-        enabled = False
 try:                            # >=0.9
     from fido2.webauthn import AuthenticatorData
 except ImportError:             # <0.9
@@ -37,6 +32,7 @@ from fido2.webauthn import UserVerificationRequirement
 
 from ._clientdata import ClientData
 from ._clientdata import WEBAUTHN_TYPE
+from ._compat import webauthn_json_mapping
 from ._data import SIGENTRY
 from ._data import credset_decode
 from ._data import sigset_decode
