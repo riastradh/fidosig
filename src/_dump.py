@@ -57,7 +57,12 @@ def _dump_credset(credset, f):
     except Exception as e:
         f.write('invalid credential set: %s\n' % (e.message,))
         return
-    f.write('credential set (%u members)\n' % (len(credset_dict),))
+    f.write(
+        'credential set (%u member%s)\n' % (
+            len(credset_dict),
+            "" if len(credset_dict) == 1 else "s",
+        )
+    )
     for credential_id, public_key in credset_dict.items():
         credidstr = credid_externalize(credential_id).decode('utf-8')
         f.write('- credential id: %s\n' % (credidstr,))
@@ -70,7 +75,12 @@ def _dump_attset(attset, f):
     except Exception as e:
         f.write('invalid attestation set: %s\n' % (e.message,))
         return
-    f.write('attestation set (%u members)\n' % (len(attset_dict),))
+    f.write(
+        'attestation set (%u member%s)\n' % (
+            len(attset_dict),
+            "" if len(attset_dict) == 1 else "s",
+        )
+    )
     for credential_id, attestation_object in attset_dict.items():
         credidstr = credid_externalize(credential_id).decode('utf-8')
         f.write('- credential id: %s\n' % (credidstr,))
