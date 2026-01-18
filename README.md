@@ -22,10 +22,10 @@ Features
   manage key storage on your U2F device.  You just plug it in and tap
   when you want to create a public key or make a signature with it.
 
-- Signatures made by fidosig are _not_ human-readable and have no
-  human-readable components like comments.  You should not be tempted
-  to inspect them; you should only pass them through automated
-  verification.
+- Signatures and signed messages made by fidosig are _not_
+  human-readable and have no human-readable components like comments.
+  You should not be tempted to inspect them; you should only pass them
+  through automated verification.
 
 - Fidosig signs the file's name, not just the file's content.  You can
   specify an arbitrary header if you like instead of the file name, or
