@@ -7,7 +7,7 @@ on:
     - FORMAT.md
     - LICENSE
     - README.md
-    - VERSIOn
+    - VERSION
   pull_request:
     paths-ignore:
     - .gitignore
