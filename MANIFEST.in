@@ -3,4 +3,3 @@ include LICENSE
 include Makefile
 include README.md
 include VERSION
-include src/data/public_suffix_list.dat

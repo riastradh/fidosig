@@ -4,18 +4,12 @@ default-target: .PHONY
 
 PYTHON = python3
 
-FETCH = curl -L -o
-
 all: .PHONY
 	rm -rf build && \
 	$(PYTHON) setup.py build
 
 sdist: .PHONY
 	$(PYTHON) setup.py sdist
-
-publicsuffix: .PHONY
-	$(FETCH) src/data/public_suffix_list.dat \
-		https://publicsuffix.org/list/public_suffix_list.dat
 
 lint: .PHONY
 	$(PYTHON) -m flake8 src test
